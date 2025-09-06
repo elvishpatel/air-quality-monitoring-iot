@@ -61,12 +61,48 @@ The system provides actionable insights about pollution levels by sending data t
 
 ## 📸 Project Preview
 **Hardware Setup**  
-![Hardware Setup](https://github.com/user-attachments/assets/5e4d882c-b7b4-436a-b9a9-3b3d738b1e14)
-)  
+![Hardware Setup](https://github.com/user-attachments/assets/5e4d882c-b7b4-436a-b9a9-3b3d738b1e14)  
 
 **Mobile Dashboard**  
-![Mobile Dashboard](https://github.com/user-attachments/assets/4f8ff33d-82e1-42b9-a7d9-a06d8d811a17)
-)  
+![Mobile Dashboard](https://github.com/user-attachments/assets/4f8ff33d-82e1-42b9-a7d9-a06d8d811a17)  
+
+## ⚡ Setup & Blynk IoT Connection
+Follow these steps to set up and connect the project to Blynk IoT:
+
+1. **Install Arduino IDE**
+   - Download and install from [Arduino Official Website](https://www.arduino.cc/en/software).
+
+2. **Add ESP8266 Board to Arduino IDE**
+   - Go to **File → Preferences → Additional Boards Manager URLs**
+   - Add: `http://arduino.esp8266.com/stable/package_esp8266com_index.json`
+   - Open **Tools → Board → Boards Manager**, search for **ESP8266**, and install.
+
+3. **Install Required Libraries**
+   - In Arduino IDE, go to **Sketch → Include Library → Manage Libraries**  
+     Install:
+     - `Blynk`
+     - `DHT sensor library`
+     - `Adafruit Unified Sensor`
+
+4. **Configure Blynk**
+   - Download **Blynk IoT** app on your smartphone.  
+   - Sign up and create a **new device** (choose NodeMCU ESP8266).  
+   - Copy the **Auth Token** generated for your device.
+
+5. **Connect Sensors**
+   - Connect MQ-135 and DHT22 sensors to the Arduino as per the wiring diagram.  
+   - Connect Arduino to NodeMCU ESP8266 for serial communication.
+
+6. **Upload Arduino Code**
+   - Open the Arduino sketch provided in the repository.  
+   - Replace the placeholder **BLYNK_AUTH_TOKEN** with your actual token.  
+   - Set your **WiFi SSID and Password** in the code.  
+   - Select the correct **Board** and **Port**, then upload the sketch.
+
+7. **Launch Blynk App Dashboard**
+   - Open the app and start your project.  
+   - Add **gauges, value displays, and notifications** to visualize AQI, temperature, and humidity.  
+   - The dashboard will update in **real time** as data is transmitted via ESP8266.
 
 ## 🔮 Future Enhancements
 - 📡 Integration with ThingSpeak or Google Firebase for advanced analytics  
