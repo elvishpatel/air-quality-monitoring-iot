@@ -61,11 +61,11 @@ The system provides actionable insights about pollution levels by sending data t
 
 ## 📸 Project Preview
 **Hardware Setup**  
-![Hardware Setup](![9](https://github.com/user-attachments/assets/5e4d882c-b7b4-436a-b9a9-3b3d738b1e14)
+![Hardware Setup](https://github.com/user-attachments/assets/5e4d882c-b7b4-436a-b9a9-3b3d738b1e14)
 )  
 
 **Mobile Dashboard**  
-![Mobile Dashboard](![10](https://github.com/user-attachments/assets/4f8ff33d-82e1-42b9-a7d9-a06d8d811a17)
+![Mobile Dashboard](https://github.com/user-attachments/assets/4f8ff33d-82e1-42b9-a7d9-a06d8d811a17)
 )  
 
 ## 🔮 Future Enhancements
