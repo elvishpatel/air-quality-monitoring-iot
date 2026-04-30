@@ -13,170 +13,181 @@
 
 **A low-cost, real-time environmental monitoring solution using Arduino UNO + NodeMCU ESP8266 to track AQI, temperature, and humidity — accessible from anywhere via smartphone.**
 
-<br/>
-
-| 🔵 Arduino IDE (C) | 🟢 ESP8266 WiFi | 🟠 Blynk IoT Cloud | 🟣 MQ-135 Sensor | 🔵 DHT22 Sensor |
-|:-:|:-:|:-:|:-:|:-:|
-
-<br/>
-
-| 📊 6 AQI Levels | 📡 3 Key Parameters | 🌍 5 Applications | 📜 MIT License |
-|:-:|:-:|:-:|:-:|
-
 </div>
+
+---
+
+## 📸 Project Preview
+
+**Hardware Setup**
+
+![Hardware Setup](https://github.com/user-attachments/assets/5e4d882c-b7b4-436a-b9a9-3b3d738b1e14)
+
+**Mobile Dashboard**
+
+![Mobile Dashboard](https://github.com/user-attachments/assets/4f8ff33d-82e1-42b9-a7d9-a06d8d811a17)
 
 ---
 
 ## 📌 Project Overview
 
-This project is an **IoT-enabled smart air quality monitoring system** that tracks Air Quality Index (AQI), temperature, and humidity in real time. It leverages the `MQ-135` sensor to detect harmful gases such as CO₂, NH₃, benzene, and smoke, and the `DHT22` sensor for accurate environmental readings.
+This project is an **IoT-enabled smart air quality monitoring system** that tracks **Air Quality Index (AQI)**, **temperature**, and **humidity** in real time. It uses the `MQ-135` gas sensor and the `AM2302 (DHT22)` sensor for environmental readings.
 
-Sensor data is processed by an **Arduino UNO** and wirelessly transmitted through a **NodeMCU ESP8266** to the **Blynk IoT Cloud**, enabling remote monitoring via a smartphone dashboard — making it ideal for urban areas, industrial environments, hospitals, and smart homes.
-
----
-
-## 📊 Live Dashboard Output
-
-> **Sample readings from the Blynk IoT Dashboard:**
-
-<div align="center">
-
-| 🌡 Temperature | 💧 Humidity | 🌫 AQI | 🟢 Status |
-|:-:|:-:|:-:|:-:|
-| **34.9 °C** | **35.1 %** | **16** | **Good 😊** |
-
-</div>
+The **Arduino UNO** reads both sensors, computes a temperature- and humidity-adjusted AQI, serializes the result as **JSON**, and sends it to a **NodeMCU ESP8266** via SoftwareSerial. The ESP8266 parses the JSON and pushes all readings to the **Blynk IoT Cloud** over WiFi — displaying live values on a smartphone dashboard and triggering alerts when air quality degrades.
 
 ---
 
-## 📈 AQI Index Reference
+## 🛠 Hardware Used
 
-| AQI Range | Status | Health Implication | Suggested Action |
-|:---------:|:------:|:-------------------|:-----------------|
-| `0 – 50` | 🟢 **Good 😊** | Air quality is satisfactory | No precautions needed |
-| `51 – 100` | 🟡 **Moderate 😐** | Acceptable; minor concern for sensitive groups | Sensitive groups limit outdoor activity |
-| `101 – 150` | 🟠 **Sensitive Groups 😷** | Unhealthy for sensitive individuals | Seniors & children: limit outdoor time |
-| `151 – 200` | 🔴 **Unhealthy 😨** | Everyone may experience health effects | Reduce outdoor exposure; wear a mask |
-| `201 – 300` | 🟣 **Very Unhealthy ☠** | Serious health effects for everyone | Avoid outdoors; close windows |
-| `301+` | ⚫ **Hazardous 💀** | Emergency conditions; everyone at risk | Stay indoors; seek medical attention |
-
----
-
-## 🛠 Hardware Components
-
-| Component | Role | Key Specs |
-|:----------|:-----|:----------|
-| **Arduino UNO** | Main microcontroller — reads sensors, computes AQI, handles serial comms | ATmega328P, 5V, 14 digital I/O |
-| **NodeMCU ESP8266** | WiFi-capable MCU — receives data from Arduino and uploads to Blynk Cloud | 3.3V, 802.11 b/g/n WiFi, 11 GPIO |
-| **MQ-135 Gas Sensor** | Detects CO₂, NH₃, benzene, alcohol, smoke for AQI computation | Analog + digital output, 5V |
-| **DHT22 Sensor** | Measures ambient temperature and relative humidity | ±0.5°C temp accuracy, ±2–5% RH |
-| **Breadboard & Jumper Wires** | Prototyping platform — no soldering required | Full-size 830 tie-points |
-| **5V Power Supply** | Powers both Arduino and NodeMCU reliably | USB or dedicated 5V/2A adapter |
+| Component | Purpose |
+|:----------|:--------|
+| **Arduino UNO** | Reads sensors, computes AQI, sends JSON over SoftwareSerial |
+| **NodeMCU ESP8266** | Receives JSON from Arduino, connects to WiFi, uploads to Blynk |
+| **MQ-135 Gas Sensor** | Measures gas concentration (analog, pin `A0`) |
+| **AM2302 / DHT22 Sensor** | Measures temperature & humidity (digital, pin `D7`) |
+| **Jumper Wires & Breadboard** | Prototyping connections — no soldering required |
+| **5V Power Supply** | Powers Arduino and NodeMCU |
 
 ---
 
-## ⚙️ System Architecture & Data Flow
+## ⚙️ How It Works
 
 ```
-┌─────────────┐     Analog/Digital     ┌─────────────────┐
-│  MQ-135     │ ─────────────────────► │                 │
-│  Gas Sensor │                        │   Arduino UNO   │
-└─────────────┘                        │  (AQI Compute)  │
-                                       │                 │
-┌─────────────┐     Single-Wire        │                 │
-│  DHT22      │ ─────────────────────► │                 │
-│  Temp & RH  │                        └────────┬────────┘
-└─────────────┘                                 │
-                                           Serial (UART)
-                                                │
-                                       ┌────────▼────────┐
-                                       │  NodeMCU        │
-                                       │  ESP8266        │
-                                       │  (WiFi Upload)  │
-                                       └────────┬────────┘
-                                                │
+┌─────────────┐   analogRead(A0)    ┌──────────────────────┐
+│  MQ-135     │ ──────────────────► │                      │
+│  Gas Sensor │                     │     Arduino UNO      │
+└─────────────┘                     │                      │
+                                    │  1. Read sensors     │
+┌─────────────┐   Digital (D7)      │  2. Compute AQI      │
+│  AM2302     │ ──────────────────► │  3. Serialize JSON   │
+│  (DHT22)    │                     │                      │
+└─────────────┘                     └──────────┬───────────┘
+                                               │
+                                    SoftwareSerial (D5/D6)
+                                      JSON @ 9600 baud
+                                               │
+                                    ┌──────────▼───────────┐
+                                    │   NodeMCU ESP8266    │
+                                    │                      │
+                                    │  1. Parse JSON       │
+                                    │  2. Map AQI to text  │
+                                    │  3. Write to Blynk   │
+                                    │  4. Trigger alerts   │
+                                    └──────────┬───────────┘
+                                               │
                                            WiFi / HTTP
-                                                │
-                                       ┌────────▼────────┐
-                                       │  Blynk IoT      │
-                                       │  Cloud Server   │
-                                       └────────┬────────┘
-                                                │
-                                       ┌────────▼────────┐
-                                       │  Smartphone     │
-                                       │  Dashboard      │
-                                       │  (Gauges/Alerts)│
-                                       └─────────────────┘
+                                               │
+                                    ┌──────────▼───────────┐
+                                    │   Blynk IoT Cloud    │
+                                    │   V1 → Temperature   │
+                                    │   V2 → Humidity      │
+                                    │   V3 → AQI (number)  │
+                                    │   V4 → AQI (text)    │
+                                    └──────────────────────┘
 ```
 
 ### Step-by-Step Flow
 
 | Step | Stage | Description |
 |:----:|:------|:------------|
-| **1** | 🔍 **Sense** | MQ-135 & DHT22 capture gas concentration, temperature, and humidity |
-| **2** | ⚙️ **Process** | Arduino UNO reads analog/digital values and computes the AQI index |
-| **3** | 📤 **Transmit** | Processed data sent to NodeMCU via UART Serial communication |
-| **4** | ☁️ **Upload** | NodeMCU pushes readings to Blynk Cloud over WiFi |
-| **5** | 📱 **Visualize** | Blynk app displays live gauges, charts, and sends threshold alerts |
+| **1** | 🔍 **Sense** | Arduino reads MQ-135 via `analogRead(A0)` and AM2302 via the `AM2302-Sensor` library on pin `D7` |
+| **2** | ⚙️ **Compute** | AQI is calculated from the raw gas value mapped to 0–300, then corrected using temperature and humidity factors |
+| **3** | 📤 **Serialize** | Arduino packages all three values into a JSON object using `ArduinoJson` and sends it via SoftwareSerial at 9600 baud |
+| **4** | 📥 **Parse** | NodeMCU deserializes the incoming JSON using `ArduinoJson` and extracts temperature, humidity, and AQI |
+| **5** | ☁️ **Upload** | NodeMCU writes values to Blynk virtual pins V1–V4 and fires an alert event if AQI ≥ 100 |
+| **6** | 📱 **Visualize** | Blynk app displays live readings and sends a push notification on poor air quality |
 
-### AQI Computation (Simplified)
+---
+
+## 📊 AQI Calculation Logic
+
+The AQI is computed in `sensor_data.ino` using three factors — raw gas reading plus environmental correction:
 
 ```c
-// MQ-135 analog output mapped to AQI index
-int sensorValue = analogRead(A0);           // Raw value: 0–1023
-float voltage = sensorValue * (5.0 / 1023.0); // Convert to voltage
-int aqi = map(sensorValue, 0, 1023, 0, 500);  // Map to 0–500 AQI scale
+// 1. Map raw MQ-135 analog value (0–1023) to a 0–300 scale
+float normalized_gas = map(rawValue, 0, 1023, 0, 300);
 
-// Push all readings to Blynk virtual pins
-Blynk.virtualWrite(V0, aqi);         // AQI
-Blynk.virtualWrite(V1, temperature); // Temperature (°C)
-Blynk.virtualWrite(V2, humidity);    // Humidity (%)
+// 2. Temperature correction factor — penalty applied above 35°C
+float temp_factor = (temperature > 35) ? (temperature - 35) * 0.5 : 0;
+
+// 3. Humidity correction factor — penalty applied above 60% RH
+float humidity_factor = (humidity > 60) ? (humidity - 60) * 0.3 : 0;
+
+// 4. Final AQI — constrained to valid 0–300 range
+float airQualityIndex = normalized_gas + temp_factor + humidity_factor;
+airQualityIndex = constrain(airQualityIndex, 0, 300);
 ```
+
+---
+
+## 📈 AQI Status Levels
+
+The numeric AQI is mapped to a human-readable text label in `Wifi.ino` before being sent to Blynk on virtual pin `V4`:
+
+| AQI Range | Status | Blynk Alert |
+|:---------:|:------:|:-----------:|
+| `0 – 50` | 🟢 Good 😊 | No |
+| `51 – 100` | 🟡 Moderate 😐 | No |
+| `101 – 150` | 🔴 Unhealthy 😷 | ✅ Yes |
+| `151 – 300` | ⚫ Hazardous ⚠️ | ✅ Yes |
+
+> Alert threshold: `airQualityIndex >= 100` triggers `Blynk.logEvent("air_quality_alert", ...)` as a push notification.
 
 ---
 
 ## 🔌 Wiring & Pin Configuration
 
-> ⚠️ **Important:** Use a **10kΩ pull-up resistor** on the DHT22 DATA pin. Use a **voltage divider (1kΩ + 2kΩ)** on the Arduino TX → NodeMCU RX line to step 5V down to 3.3V.
+> ⚠️ **Important:** Use a **voltage divider (1kΩ + 2kΩ)** on the Arduino TX → NodeMCU RX line to step 5V down to 3.3V and protect the ESP8266 GPIO pins.
+
+### AM2302 (DHT22) → Arduino UNO
+
+| AM2302 Pin | Arduino Pin | Notes |
+|:----------:|:-----------:|:------|
+| VCC | 5V | Power supply |
+| GND | GND | Common ground |
+| DATA | **D7** | `DHTPIN 7` in code — add 10kΩ pull-up to VCC |
 
 ### MQ-135 Gas Sensor → Arduino UNO
 
-| MQ-135 Pin | Arduino UNO Pin | Wire Color | Notes |
-|:----------:|:---------------:|:----------:|:------|
-| VCC | 5V | 🔴 Red | Power supply |
-| GND | GND | ⚫ Black | Common ground |
-| A0 (Analog) | A0 | 🔵 Blue | Gas concentration (0–1023) |
-| D0 (Digital) | D7 | 🟢 Green | Optional threshold output |
+| MQ-135 Pin | Arduino Pin | Notes |
+|:----------:|:-----------:|:------|
+| VCC | 5V | Power supply |
+| GND | GND | Common ground |
+| A0 (Analog out) | **A0** | `MQ135_PIN A0` in code |
 
-### DHT22 Temperature & Humidity Sensor → Arduino UNO
+### Arduino UNO → NodeMCU ESP8266 (SoftwareSerial)
 
-| DHT22 Pin | Arduino UNO Pin | Wire Color | Notes |
-|:---------:|:---------------:|:----------:|:------|
-| VCC | 5V | 🔴 Red | Power supply (3.3–5V) |
-| GND | GND | ⚫ Black | Common ground |
-| DATA | D2 | 🟡 Yellow | Single-wire data — add 10kΩ pull-up to VCC |
+| Arduino Pin | NodeMCU Pin | Notes |
+|:-----------:|:-----------:|:------|
+| **D5** (TX) | **D6** (RX) | Arduino transmits → NodeMCU receives; use voltage divider here |
+| **D6** (RX) | **D5** (TX) | NodeMCU transmits → Arduino receives |
+| GND | GND | Common ground — required for serial to work |
 
-### Arduino UNO → NodeMCU ESP8266 (Serial)
+> SoftwareSerial declarations in code:
+> - `sensor_data.ino` (Arduino): `SoftwareSerial nodemcu(5, 6);` → RX on D5, TX on D6
+> - `Wifi.ino` (NodeMCU): `SoftwareSerial nodemcu(D6, D5);` → RX on D6, TX on D5
 
-| Arduino Pin | NodeMCU Pin | Wire Color | Notes |
-|:-----------:|:-----------:|:----------:|:------|
-| TX (Pin 1) | RX (D7) | 🟣 Purple | **Use voltage divider — 5V → 3.3V** |
-| RX (Pin 0) | TX (D8) | 🔵 Blue | Direct connection (3.3V safe) |
-| GND | GND | ⚫ Black | Common ground (required) |
+### Blynk Virtual Pin Mapping
+
+| Virtual Pin | Data | Data Type |
+|:-----------:|:-----|:---------:|
+| `V1` | Temperature (°C) | Float |
+| `V2` | Humidity (%) | Float |
+| `V3` | AQI (numeric 0–300) | Int |
+| `V4` | AQI status text | String |
 
 ---
 
 ## ✨ Key Features
 
-- ✅ **Real-Time Monitoring** — Tracks gas concentration, temperature, and humidity simultaneously with low latency
-- ✅ **AQI Calculation** — Computes a simplified AQI index with color-coded health status indicators
-- ✅ **Mobile Dashboard** — Interactive Blynk app with gauges, line graphs, LED indicators, and live values
-- ✅ **Wireless Transmission** — ESP8266 enables WiFi-based cloud upload — no USB cable needed after setup
-- ✅ **Smart Alerts** — Automatic SMS/Email notifications when AQI exceeds configurable thresholds
-- ✅ **Scalable & Modular** — Easily extend with CO, PM2.5, PM10, or CO₂ sensors without redesigning the core
-- ✅ **Low-Cost & DIY-Friendly** — Total BOM under $20 using off-the-shelf components; no PCB required
-- ✅ **Cloud Data Logging** — Blynk stores historical sensor readings for trend analysis and export
-- 🔔 **Threshold Alerts** — Push notifications via Blynk when AQI, temperature, or humidity cross set limits
+- ✅ **Real-Time Monitoring** — Sensors polled every 1 second; readings sent to Blynk with 500ms loop on NodeMCU
+- ✅ **Multi-Factor AQI** — Accounts for raw gas concentration plus temperature and humidity correction
+- ✅ **JSON Serial Protocol** — Structured `ArduinoJson` packets over SoftwareSerial at 9600 baud for reliable inter-device communication
+- ✅ **Mobile Dashboard** — Blynk virtual pins V1–V4 drive live gauges, value displays, and a text status label
+- ✅ **Smart Alerts** — `Blynk.logEvent()` sends a push notification automatically when AQI ≥ 100
+- ✅ **Serial Debug Output** — Both Arduino and NodeMCU print human-readable logs to Serial Monitor at 115200 baud
+- ✅ **Wireless Transmission** — NodeMCU handles all WiFi and cloud communication independently
+- ✅ **Low-Cost & DIY-Friendly** — Built with off-the-shelf modules under $20 total; no custom PCB required
 
 ---
 
@@ -184,12 +195,12 @@ Blynk.virtualWrite(V2, humidity);    // Humidity (%)
 
 | Application | Use Case |
 |:------------|:---------|
-| 🏠 **Smart Homes** | Track indoor pollution, CO₂ buildup, and humidity for a healthier living environment |
-| 🏭 **Industrial Sites** | Ensure worker safety in factories, warehouses, and chemically hazardous environments |
-| 🏥 **Hospitals & Labs** | Maintain clean-air standards for patients, surgical rooms, and sensitive equipment |
-| 🌆 **Urban Monitoring** | Deploy across city grids to map pollution hotspots and support policy decisions |
-| 🚗 **Vehicle Emissions** | Detect harmful gases in parking garages, tunnels, or emission testing stations |
-| 🎓 **Education & Research** | A perfect hands-on IoT learning project for students and makers |
+| 🏠 **Smart Homes** | Monitor indoor gas levels and humidity for a healthier living environment |
+| 🏭 **Industrial Sites** | Detect hazardous gas concentrations to ensure worker safety |
+| 🏥 **Hospitals & Labs** | Maintain clean-air standards for sensitive patients and equipment |
+| 🌆 **Urban Monitoring** | Deploy multiple nodes to map city-wide air quality hotspots |
+| 🚗 **Garages & Tunnels** | Detect CO and vehicle exhaust gases in enclosed spaces |
+| 🎓 **Education & Research** | Hands-on IoT learning with real sensor data and cloud integration |
 
 ---
 
@@ -197,7 +208,7 @@ Blynk.virtualWrite(V2, humidity);    // Humidity (%)
 
 ### Step 1 — Install Arduino IDE
 
-Download and install the latest Arduino IDE from [arduino.cc/en/software](https://www.arduino.cc/en/software). Version 1.8.x or 2.x is supported.
+Download from [arduino.cc/en/software](https://www.arduino.cc/en/software). Version 1.8.x or 2.x is supported.
 
 ---
 
@@ -217,63 +228,97 @@ Then go to **Tools → Board → Boards Manager**, search for `ESP8266`, and ins
 
 Go to **Sketch → Include Library → Manage Libraries** and install:
 
-| Library | Purpose |
-|:--------|:--------|
-| `Blynk` | IoT Cloud communication with the Blynk platform |
-| `DHT sensor library` | Reading temperature and humidity from DHT22 |
-| `Adafruit Unified Sensor` | Sensor abstraction layer (required by DHT library) |
+| Library | Used In | Purpose |
+|:--------|:-------:|:--------|
+| `AM2302-Sensor` | `sensor_data.ino` | Reads temperature & humidity from AM2302 / DHT22 |
+| `ArduinoJson` | Both files | JSON serialization on Arduino; deserialization on NodeMCU |
+| `SoftwareSerial` | Both files | UART serial link between Arduino and NodeMCU |
+| `ESP8266WiFi` | `Wifi.ino` | WiFi connectivity on NodeMCU |
+| `BlynkSimpleEsp8266` | `Wifi.ino` | Blynk cloud integration for ESP8266 |
 
 ---
 
 ### Step 4 — Configure Blynk IoT
 
 1. Download the **Blynk IoT** app on iOS or Android
-2. Sign up and create a **new device** → select `NodeMCU ESP8266`
-3. Copy the **Auth Token** from device settings
-4. Add widgets to the dashboard:
+2. Sign up → create a **new template** → select `NodeMCU ESP8266`
+3. Create the following **datastreams**:
 
-| Widget | Virtual Pin | Range / Type |
-|:-------|:-----------:|:-------------|
-| Gauge | `V0` | AQI — range 0 to 500 |
-| Value Display | `V1` | Temperature in °C |
-| Value Display | `V2` | Humidity in % |
-| SuperChart | `V0, V1, V2` | Historical trend graph |
-| Notification | — | AQI threshold alerts |
+| Virtual Pin | Name | Data Type |
+|:-----------:|:-----|:---------:|
+| `V1` | Temperature | Double |
+| `V2` | Humidity | Double |
+| `V3` | Air Quality Index | Integer |
+| `V4` | Air Quality Status | String |
+
+4. In your dashboard add: **Gauge** (V3), **Value Display** (V1, V2, V4), **SuperChart** (V1–V3), **Notification** widget for alerts
+5. Copy your **Auth Token**, **Template ID**, and **Template Name** from the device settings
 
 ---
 
 ### Step 5 — Wire the Hardware
 
-Connect all components as described in the **Wiring & Pin Configuration** section above. Key reminders:
+Connect all components as per the **Wiring & Pin Configuration** section above. Key reminders:
 
-- Add a **10kΩ pull-up resistor** between DHT22 DATA and VCC
-- Use a **voltage divider** (1kΩ + 2kΩ) on Arduino TX → NodeMCU RX to prevent damage
-- Ensure all components share a **common GND**
+- **10kΩ pull-up resistor** between AM2302 DATA pin and VCC
+- **Voltage divider** on Arduino D5 (TX) → NodeMCU D6 (RX) to protect the ESP8266
+- All modules must share a **common GND**
 
 ---
 
-### Step 6 — Configure & Upload the Sketch
+### Step 6 — Upload `sensor_data.ino` to Arduino UNO
 
-Open the Arduino sketch and update these lines:
+No code changes needed unless you change the wiring. Select:
 
-```c
-#define BLYNK_AUTH_TOKEN  "your_auth_token_here"
+- **Board:** Arduino UNO
+- **Port:** your Arduino COM port
+- Click **Upload**, then open **Serial Monitor at 115200 baud** — you should see:
+
+```
+Sent -> Temp: 34.9°C, Humidity: 35.1%, AQI: 16.0
+```
+
+---
+
+### Step 7 — Configure & Upload `Wifi.ino` to NodeMCU
+
+Update your credentials at the top of `Wifi.ino`:
+
+```cpp
+#define BLYNK_TEMPLATE_ID   "your_template_id"
+#define BLYNK_TEMPLATE_NAME "your_template_name"
+#define BLYNK_AUTH_TOKEN    "your_auth_token"
 
 char ssid[] = "Your_WiFi_SSID";
 char pass[] = "Your_WiFi_Password";
 ```
 
-Then:
+Then select:
 
-1. Select **Tools → Board → NodeMCU 1.0 (ESP-12E Module)**
-2. Select the correct **COM Port** under Tools → Port
-3. Click **Upload** and open **Serial Monitor** at `9600 baud` to verify
+- **Board:** NodeMCU 1.0 (ESP-12E Module)
+- **Port:** your NodeMCU COM port
+- Click **Upload**, open **Serial Monitor at 115200 baud** — you should see:
+
+```
+Received -> Temp: 34.9°C, Humidity: 35.1%, AQI: 16
+```
 
 ---
 
-### Step 7 — Launch Blynk Dashboard
+### Step 8 — Launch Blynk Dashboard
 
-Open the Blynk app, start your project, and watch the readings update in real time. You should see live AQI, temperature, and humidity values flowing within seconds of upload.
+Open the Blynk app and start your project. Within seconds, live readings will appear on V1–V4. If AQI reaches 100 or above, a push notification fires automatically via `Blynk.logEvent("air_quality_alert", ...)`.
+
+---
+
+## 📁 File Structure
+
+```
+📦 iot-air-quality-monitor/
+├── 📄 sensor_data.ino    # Arduino UNO — sensor reading, AQI computation, JSON serial output
+├── 📄 Wifi.ino           # NodeMCU ESP8266 — JSON parsing, Blynk upload, alert logic
+└── 📄 README.md
+```
 
 ---
 
@@ -281,12 +326,13 @@ Open the Blynk app, start your project, and watch the readings update in real ti
 
 | Technology | Role |
 |:-----------|:-----|
-| **Arduino IDE (C/C++)** | Firmware development for sensor reading and AQI computation |
-| **NodeMCU ESP8266** | WiFi-enabled data transmission to cloud |
-| **Blynk IoT Cloud** | Real-time dashboard, data logging, and push notifications |
-| **UART Serial** | Communication protocol between Arduino and NodeMCU |
-| **MQ-135 + DHT22** | Primary sensing hardware for gas and environmental data |
-| **WiFi 802.11 b/g/n** | Wireless protocol for cloud connectivity |
+| **Arduino IDE (C/C++)** | Firmware development for both Arduino UNO and NodeMCU |
+| **AM2302-Sensor Library** | DHT22 / AM2302 temperature & humidity acquisition |
+| **ArduinoJson** | Structured JSON communication between the two microcontrollers |
+| **SoftwareSerial** | UART serial link between Arduino (D5/D6) and NodeMCU (D5/D6) |
+| **NodeMCU ESP8266** | WiFi connectivity and Blynk cloud upload |
+| **Blynk IoT Cloud** | Real-time dashboard (V1–V4), data logging, and push alerts |
+| **WiFi 802.11 b/g/n** | Wireless protocol used by ESP8266 for cloud connectivity |
 
 ---
 
@@ -294,12 +340,12 @@ Open the Blynk app, start your project, and watch the readings update in real ti
 
 | Enhancement | Description |
 |:------------|:------------|
-| 📡 **Multi-Platform Cloud** | Integrate ThingSpeak or Google Firebase for webhooks, IFTTT, and advanced analytics |
-| 📊 **ML Predictions** | Export sensor logs for time-series ML models to predict future AQI levels |
-| 🔋 **Battery-Powered Version** | Add LiPo battery + solar charging for fully portable, off-grid deployment |
-| 🌍 **Map Integration** | Use Google Maps API to visualize AQI readings geographically across multiple nodes |
-| 🧪 **Additional Sensors** | Add PM2.5, PM10, CO, NO₂, and O₃ for comprehensive multi-pollutant monitoring |
-| 📱 **Custom Mobile App** | Build a React Native app with custom UX, local notifications, and offline support |
+| 📡 **Multi-Platform Cloud** | Add ThingSpeak or Google Firebase for webhooks, IFTTT, and advanced data analytics |
+| 📊 **ML-Based Predictions** | Use historical sensor logs to train a model predicting future AQI spikes |
+| 🔋 **Battery-Powered Version** | LiPo battery + solar charging for portable, off-grid deployment |
+| 🌍 **Map Visualization** | Combine with Google Maps API to display AQI across multiple deployed nodes |
+| 🧪 **Additional Sensors** | Add PM2.5, PM10, CO, NO₂, and O₃ sensors for full multi-pollutant coverage |
+| 📱 **Custom Mobile App** | React Native app with offline caching, local notifications, and historical charts |
 
 ---
 
@@ -309,11 +355,9 @@ Contributions, issues, and feature requests are welcome!
 
 1. **Fork** the repository
 2. **Create** a feature branch: `git checkout -b feature/your-feature-name`
-3. **Commit** your changes: `git commit -m "Add: your feature description"`
+3. **Commit** your changes: `git commit -m "Add: description of your change"`
 4. **Push** to the branch: `git push origin feature/your-feature-name`
 5. **Open** a Pull Request against `main`
-
-Please make sure your code is well-commented and follows the existing style.
 
 ---
 
@@ -323,8 +367,6 @@ Please make sure your code is well-commented and follows the existing style.
 
 Made with ❤️ by **Elvish**
 
-*IoT Air Quality Monitoring System — Open Source & Community Driven*
-
 </div>
 
 ---
@@ -332,10 +374,6 @@ Made with ❤️ by **Elvish**
 ## 📜 License
 
 This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
-
-```
-MIT License — Free to use, modify, and distribute with attribution.
-```
 
 ---
 
