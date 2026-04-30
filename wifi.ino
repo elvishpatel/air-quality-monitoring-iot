@@ -9,8 +9,8 @@
 #include <BlynkSimpleEsp8266.h>
 
 // WiFi Credentials
-char ssid[] = "Elvish Patel";
-char pass[] = "elvish123patel";
+char ssid[] = "your_wifi_name";
+char pass[] = "your_wifi_password";
 
 // Virtual Pins for Blynk
 #define VIRTUAL_TEMP V1
