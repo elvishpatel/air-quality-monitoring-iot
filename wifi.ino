@@ -1,7 +1,7 @@
 // Blynk Authentication
-#define BLYNK_TEMPLATE_ID "TMPL3tn4CGIpV"
-#define BLYNK_TEMPLATE_NAME "Esp8266"
-#define BLYNK_AUTH_TOKEN "EGamxiacJmo02kYDPmVj6bOBwmp0BbMQ"
+#define BLYNK_TEMPLATE_ID   "your_template_id"
+#define BLYNK_TEMPLATE_NAME "your_template_name"
+#define BLYNK_AUTH_TOKEN    "your_auth_token"
 
 #include <SoftwareSerial.h>
 #include <ArduinoJson.h>
